@@ -1,8 +1,5 @@
-var canvas = document.getElementById("myCanvas");
-var ctx = canvas.getContext('2d');
-
-canvas.width = window.innerWidth - 10;
-canvas.height = window.innerHeight - 10;
+var ctx;
+var canvas;
 
 function randInt(min, max) {
     let r = Math.floor(Math.random() * (max - min + 1) + min);
@@ -30,13 +27,13 @@ addEventListener('click', event => {
 
 addEventListener("keydown", event => {
   switch(event.key.toLowerCase()){
-    case "w":
+    case "z":
       ball.move(0, -1);
       break;
     case "s":
       ball.move(0, 1);
       break;
-    case "a":
+    case "q":
       ball.move(-1, 0);
       break;
     case "d":
@@ -47,17 +44,17 @@ addEventListener("keydown", event => {
 
 addEventListener("keyup", event => {
   switch(event.key.toLowerCase()){
-    case "w":
-      ball.stopY();
+    case "z":
+      ball.stopY(-1);
       break;
     case "s":
-      ball.stopY();
+      ball.stopY(1);
       break;
-    case "a":
-      ball.stopX();
+    case "q":
+      ball.stopX(-1);
       break;
     case "d":
-      ball.stopX();
+      ball.stopX(1);
       break;
   }
 });
@@ -72,6 +69,10 @@ function Ball(x, y, radius, colour){
   this.update = function(){
     this.x += this.velX * 3;
     this.y += this.velY * 3;
+    if (this.velX != 0 || this.velY != 0){
+      //send update to peers as ball has moved
+      sendData();
+    }
   };
   
   this.move = function(deltaX, deltaY){
@@ -79,12 +80,16 @@ function Ball(x, y, radius, colour){
     this.velY = deltaY ? deltaY : this.velY;
   };
   
-  this.stopX = function(){
-    this.velX = 0;
+  this.stopX = function(dir){
+    if (dir == this.velX){
+      this.velX = 0;
+    }
   };
   
-  this.stopY = function(){
-    this.velY = 0;
+  this.stopY = function(dir){
+    if (dir == this.velY){
+      this.velY = 0;
+    }
   };
   
   this.getX = function(){
@@ -101,6 +106,10 @@ function Ball(x, y, radius, colour){
     ctx.fillStyle = this.colour;
     ctx.fill();
   };
+
+  this.getObj = function(){
+    return {x: this.x, y : this.y, radius : this.radius, colour : this.colour}
+  }
   
   
   this.x = x;
@@ -112,12 +121,76 @@ function Ball(x, y, radius, colour){
   
 }
 
+function drawPeerBall(ball){
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.radius, 0, 2*Math.PI, false);
+  ctx.fillStyle = ball.colour;
+  ctx.fill();
+}
+
+//Peer-related functions
+function connect(roomID){
+  var dataConnection = peer.connect(roomID);
+  setupConnection(dataConnection);
+}
+
+function setupConnection(dataConnection){
+  peers.push(dataConnection);
+  dataConnection.on("open", () => {
+    console.log("ready to receive data");
+    dataConnection.on("data", data => {
+      if (data.type == "ball"){
+        balls[dataConnection.id] = data.ball;
+      } else if (data.type == "peers"){
+        peers = data.peers;
+      }
+      
+    });
+  });
+
+  dataConnection.on("close", () => {
+    console.log("lost connection to peer with id " + dataConnection.id);
+    peers.splice(peers.indexOf(dataConnection), 1);
+  });
+}
+
+function sendData(){
+  for (var k of Object.keys(peers)){
+    peers[k].send({type: "ball", ball : ball.getObj()});
+  }
+}
+
+function sendPeers(){
+  for (var k of Object.keys(peers)){
+    var peersToSend = {};
+    for (var j of Object.keys(peers)){
+      if (j != k){
+        peersToSend[j] = peers[j];
+        console.log("Need to send " + j + " to " + k + " as it is a different peer");
+      } else {
+        console.log("Not sending peer " + j + " to " + k + " as it is himself");
+      }
+    }
+    peers[k].send({type: "peers", peers : peersToSend});
+  }
+}
+
 function init(){
 
 }
 
 var count = 0;
 var ball = new Ball(150, 100, 20, "rgb(200, 90, 150)");
+var balls = {};
+var peers = [];
+
+var peer = new Peer("p2pYavor");
+peer.on('connection', dataConnection => {
+  console.log(dataConnection);
+  balls[dataConnection.id] = new Ball(0, 0, 20, "rgb(200, 89, 170)");
+  setupConnection(dataConnection);
+  sendPeers();
+});
 
 function animate(){
   //console.log(spawnPoints);
@@ -128,8 +201,40 @@ function animate(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ball.update();
   ball.draw();
+  for (var ballID of Object.keys(balls)){
+    drawPeerBall(balls[ballID]);
+  }
   
 }
 
-init();
-animate();
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  canvas = document.getElementById("myCanvas");
+  ctx = canvas.getContext('2d');
+  var roomIDInput = document.getElementById("roomIDInput");
+  var roomIDLbl = document.getElementById("roomIDLbl");
+  var connectBtn = document.getElementById("joinBtn");
+  connectBtn.addEventListener("click", ev => {
+    let roomID = roomIDInput.value;
+    console.log("connecting to " + roomID);
+    connect("p2pYavor");
+    //connect(roomID);
+  });
+
+
+  canvas.width = window.innerWidth - 10;
+  canvas.height = window.innerHeight - 10;
+  init();
+  animate();
+
+  peer.on("error", err => {
+    console.log(err);
+    peer = new Peer();
+  })
+
+  peer.on('open', id => {
+      console.log("connected");
+      roomIDLbl.innerHTML = id;
+  });
+});
