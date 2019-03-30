@@ -131,11 +131,11 @@ function drawPeerBall(ball){
 //Peer-related functions
 function connect(roomID){
   var dataConnection = peer.connect(roomID);
-  setupConnection(dataConnection);
+  connectToServer(dataConnection);
 }
 
-function setupConnection(dataConnection){
-  peers.push(dataConnection);
+function connectToServer(dataConnection){
+  server = dataConnection;
   dataConnection.on("open", () => {
     console.log("ready to receive data");
     dataConnection.on("data", data => {
@@ -183,14 +183,9 @@ var count = 0;
 var ball = new Ball(150, 100, 20, "rgb(200, 90, 150)");
 var balls = {};
 var peers = [];
+var peer = new Peer();
+var server;
 
-var peer = new Peer("p2pYavor");
-peer.on('connection', dataConnection => {
-  console.log(dataConnection);
-  balls[dataConnection.id] = new Ball(0, 0, 20, "rgb(200, 89, 170)");
-  setupConnection(dataConnection);
-  sendPeers();
-});
 
 function animate(){
   //console.log(spawnPoints);
@@ -213,13 +208,12 @@ document.addEventListener('DOMContentLoaded', function() {
   canvas = document.getElementById("myCanvas");
   ctx = canvas.getContext('2d');
   var roomIDInput = document.getElementById("roomIDInput");
-  var roomIDLbl = document.getElementById("roomIDLbl");
   var connectBtn = document.getElementById("joinBtn");
   connectBtn.addEventListener("click", ev => {
     let roomID = roomIDInput.value;
     console.log("connecting to " + roomID);
-    connect("p2pYavor");
-    //connect(roomID);
+    //connect("p2pYavor");
+    connect(roomID);
   });
 
 
