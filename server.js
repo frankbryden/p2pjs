@@ -2,7 +2,7 @@ class Server {
     constructor(){
         this.peer = new Peer();
         this.setupServer();
-        this.peers = [];
+        this.peers = {};
         this.init();
     }
 
@@ -22,7 +22,7 @@ class Server {
     }
 
     setupConnection(dataConnection){
-        this.peers.push(dataConnection);
+        this.peers[dataConnection.id] = dataConnection;
         log(dataConnection.id);
         if (this.onNewPlayer){
             this.onNewPlayer(dataConnection.id);
@@ -34,6 +34,10 @@ class Server {
                 }
             });
         });
+    }
+
+    send(playerID, data){
+        this.peers[playerID].send(data);
     }
 
     setupServer(){

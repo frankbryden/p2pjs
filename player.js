@@ -30,6 +30,10 @@ class Player {
         }
     }
 
+    serialise(){
+        return {x : this.x, y : this.y};
+    }
+
     updateState(state){
         this.keys = state;
     }

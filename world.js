@@ -20,7 +20,16 @@ class World {
 		this.players[playerID] = new Player(playerID, Math.round(Math.random() * 200), Math.round(Math.random() * 200), "rgb(100, 200, 100)");
 	}
 
+	get worldState(){
+		let state = {};
+		for (var playerID of Object.keys(this.players)){
+			state[playerID] = this.players[playerID].serialise();
+		}
+		return state;
+	}
+
 	tick(){
+		//update server state
 		for (var playerID of Object.keys(this.players)){
 			this.players[playerID].update();
 		}
@@ -31,6 +40,11 @@ class World {
 			}
 		}
 		//console.log(this.players);
+		//send updated server state to players
+		let state = this.worldState;
+		for (var playerID of Object.keys(this.players)){
+			this.server.send(playerID, state);
+		}
 	}
 
 	playerUpdate(state){

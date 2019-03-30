@@ -91,8 +91,8 @@ function getState(){
 
 function Ball(x, y, radius, colour){
   this.update = function(){
-    this.x += this.velX * 3;
-    this.y += this.velY * 3;
+    this.x += this.velX * 1;
+    this.y += this.velY * 1;
     if (this.velX != 0 || this.velY != 0){
       //send update to peers as ball has moved
       sendData();
@@ -163,11 +163,14 @@ function connectToServer(dataConnection){
   dataConnection.on("open", () => {
     console.log("ready to receive data");
     dataConnection.on("data", data => {
-      if (data.type == "ball"){
-        balls[dataConnection.id] = data.ball;
-      } else if (data.type == "peers"){
-        peers = data.peers;
+      console.log(data);
+      let keys = Object.keys(data);
+      if (keys.length > 0){
+        let playerData = data[keys[0]];
+        serverBall.x = playerData.x;
+        serverBall.y = playerData.y;
       }
+      
       
     });
   });
@@ -220,6 +223,7 @@ var balls = {};
 var peers = [];
 var peer = new Peer();
 var server;
+var serverBall = new Ball(0, 0, 10, "rgb(0, 0, 0)");
 
 
 function animate(){
@@ -234,6 +238,7 @@ function animate(){
   for (var ballID of Object.keys(balls)){
     drawPeerBall(balls[ballID]);
   }
+  serverBall.draw();
   
 }
 
