@@ -6,6 +6,14 @@ class Server {
         this.init();
     }
 
+    setOnNewPlayer(newPlayerCallback){
+        this.onNewPlayer = newPlayerCallback;
+    }
+
+    setOnPlayerUpdate(onPlayerUpdateCallback){
+        this.onPlayerUpdate = onPlayerUpdateCallback;
+    }
+
     init(){
         this.peer.on("connection", (dataConnection) => {
             log("New connection");
@@ -15,9 +23,15 @@ class Server {
 
     setupConnection(dataConnection){
         this.peers.push(dataConnection);
+        log(dataConnection.id);
+        if (this.onNewPlayer){
+            this.onNewPlayer(dataConnection.id);
+        }
         dataConnection.on("open", () => {
             dataConnection.on("data", (data) => {
-                log(data);
+                if (this.onPlayerUpdate){
+                    this.onPlayerUpdate({"playerID" : dataConnection.id, keys : data});
+                }
             });
         });
     }

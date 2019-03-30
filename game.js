@@ -1,5 +1,20 @@
 var ctx;
 var canvas;
+var pressed={};
+var tickrate = 32;
+//AZERTY mapping
+var keyMapping = {"z": "up",
+                  "s": "down",
+                  "q": "left",
+                  "d": "right"
+}
+
+//QWERTY mapping
+/*var keyMapping = {"w": "up",
+                  "s": "down",
+                  "a": "left",
+                  "d": "right"
+}*/
 
 function randInt(min, max) {
     let r = Math.floor(Math.random() * (max - min + 1) + min);
@@ -26,6 +41,7 @@ addEventListener('click', event => {
 });
 
 addEventListener("keydown", event => {
+  pressed[event.key.toLowerCase()] = true;
   switch(event.key.toLowerCase()){
     case "z":
       ball.move(0, -1);
@@ -43,6 +59,7 @@ addEventListener("keydown", event => {
 });
 
 addEventListener("keyup", event => {
+  delete pressed[event.key.toLowerCase()];
   switch(event.key.toLowerCase()){
     case "z":
       ball.stopY(-1);
@@ -64,6 +81,13 @@ addEventListener('resize', function(event){
   canvas.height = window.innerHeight - 10;
 });
 
+function getState(){
+  let state = {};
+  for (var k of Object.keys(pressed)){
+    state[keyMapping[k]] = true;
+  }
+  return state;
+}
 
 function Ball(x, y, radius, colour){
   this.update = function(){
@@ -149,9 +173,20 @@ function connectToServer(dataConnection){
   });
 
   dataConnection.on("close", () => {
-    console.log("lost connection to peer with id " + dataConnection.id);
+    console.log("lost connection to server with id " + dataConnection.id);
     peers.splice(peers.indexOf(dataConnection), 1);
   });
+  startTransmission();
+}
+
+function startTransmission(){
+  transmitState();
+}
+
+function transmitState(){
+  let state = getState();
+  server.send(state);
+  setTimeout(transmitState, 1000/tickrate);
 }
 
 function sendData(){
@@ -227,8 +262,8 @@ document.addEventListener('DOMContentLoaded', function() {
     peer = new Peer();
   })
 
-  peer.on('open', id => {
+  /* peer.on('open', id => {
       console.log("connected");
       roomIDLbl.innerHTML = id;
-  });
+  }); */
 });

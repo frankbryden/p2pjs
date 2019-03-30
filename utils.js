@@ -1,4 +1,5 @@
 var txtArea;
+var playerX;
 
 function log(txt){
     console.log(txt);
@@ -9,8 +10,14 @@ function log(txt){
     }
 }
 
+function showX(data){
+    playerX.innerText = data;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     txtArea = document.getElementById("statusTxt");
+    playerX = document.getElementById("playerX");
     console.log("hey");
     console.log(txtArea);
+    console.log(playerX);
 });

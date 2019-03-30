@@ -9,6 +9,10 @@ class Player {
     }
 
     update(){
+        if (this.keys == undefined){
+            console.error("we have a problem with undefined keys");
+            return;
+        }
         if (this.keys["up"]){
             this.y -= this.speed;
         }
@@ -24,5 +28,9 @@ class Player {
         if (this.keys["right"]){
             this.x += this.speed;
         }
+    }
+
+    updateState(state){
+        this.keys = state;
     }
 }
