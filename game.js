@@ -163,7 +163,7 @@ function connectToServer(dataConnection){
   dataConnection.on("open", () => {
     console.log("ready to receive data");
     dataConnection.on("data", data => {
-      console.log(data);
+      //console.log(data);
       let keys = Object.keys(data);
       if (keys.length > 0){
         let playerData = data[keys[0]];
@@ -230,8 +230,11 @@ function animate(){
   //console.log(spawnPoints);
   //count++;
   if (count < 5){
-    requestAnimationFrame(animate);
+    //requestAnimationFrame(animate);
+    setTimeout(animate, 1000/tickrate);
+    //setTimeout(animate, 1000);
   }
+  console.log("draw");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ball.update();
   ball.draw();
@@ -241,7 +244,6 @@ function animate(){
   serverBall.draw();
   
 }
-
 
 
 document.addEventListener('DOMContentLoaded', function() {
