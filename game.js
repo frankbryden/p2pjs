@@ -91,8 +91,8 @@ function getState(){
 
 function Ball(x, y, radius, colour){
   this.update = function(){
-    this.x += this.velX * 1;
-    this.y += this.velY * 1;
+    this.x += this.velX * 2;
+    this.y += this.velY * 2;
     if (this.velX != 0 || this.velY != 0){
       //send update to peers as ball has moved
       sendData();
@@ -242,7 +242,6 @@ function animate(){
     drawPeerBall(balls[ballID]);
   }
   serverBall.draw();
-  
 }
 
 

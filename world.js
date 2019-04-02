@@ -1,4 +1,4 @@
-var tickRate = 32;
+var tickRate = 8;
 
 log("Setting up server...");
 

@@ -4,7 +4,7 @@ class Player {
         this.x = x;
         this.y = y;
         this.col = col;
-        this.speed = 1;
+        this.speed = 2;
         this.keys = {"up": false, "down": false, "left": false, "right": false}
     }
 
