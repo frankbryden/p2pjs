@@ -42,38 +42,10 @@ addEventListener('click', event => {
 
 addEventListener("keydown", event => {
   pressed[event.key.toLowerCase()] = true;
-  switch(event.key.toLowerCase()){
-    case "z":
-      ball.move(0, -1);
-      break;
-    case "s":
-      ball.move(0, 1);
-      break;
-    case "q":
-      ball.move(-1, 0);
-      break;
-    case "d":
-      ball.move(1, 0);
-      break;
-  }
 });
 
 addEventListener("keyup", event => {
   delete pressed[event.key.toLowerCase()];
-  switch(event.key.toLowerCase()){
-    case "z":
-      ball.stopY(-1);
-      break;
-    case "s":
-      ball.stopY(1);
-      break;
-    case "q":
-      ball.stopX(-1);
-      break;
-    case "d":
-      ball.stopX(1);
-      break;
-  }
 });
 
 addEventListener('resize', function(event){
@@ -89,68 +61,6 @@ function getState(){
   return state;
 }
 
-function Ball(x, y, radius, colour){
-  this.update = function(){
-    this.x += this.velX * 2;
-    this.y += this.velY * 2;
-    if (this.velX != 0 || this.velY != 0){
-      //send update to peers as ball has moved
-      sendData();
-    }
-  };
-  
-  this.move = function(deltaX, deltaY){
-    this.velX = deltaX ? deltaX : this.velX;
-    this.velY = deltaY ? deltaY : this.velY;
-  };
-  
-  this.stopX = function(dir){
-    if (dir == this.velX){
-      this.velX = 0;
-    }
-  };
-  
-  this.stopY = function(dir){
-    if (dir == this.velY){
-      this.velY = 0;
-    }
-  };
-  
-  this.getX = function(){
-    return this.x;
-  };
-  
-  this.getY = function(){
-    return this.y;
-  };
-  
-  this.draw = function(){
-    ctx.beginPath();
-    ctx.arc(this.getX(), this.getY(), this.radius, 0, 2*Math.PI, false);
-    ctx.fillStyle = this.colour;
-    ctx.fill();
-  };
-
-  this.getObj = function(){
-    return {x: this.x, y : this.y, radius : this.radius, colour : this.colour}
-  }
-  
-  
-  this.x = x;
-  this.y = y;
-  this.velX = 0;
-  this.velY = 0;
-  this.radius = radius;
-  this.colour = colour;
-  
-}
-
-function drawPeerBall(ball){
-  ctx.beginPath();
-  ctx.arc(ball.x, ball.y, ball.radius, 0, 2*Math.PI, false);
-  ctx.fillStyle = ball.colour;
-  ctx.fill();
-}
 
 //Peer-related functions
 function connect(roomID){
@@ -169,9 +79,8 @@ function connectToServer(dataConnection){
         let playerData = data[keys[0]];
         serverBall.x = playerData.x;
         serverBall.y = playerData.y;
+        serverInterpBall.addPosition(playerData.x, playerData.y + 100);
       }
-      
-      
     });
   });
 
@@ -198,32 +107,18 @@ function sendData(){
   }
 }
 
-function sendPeers(){
-  for (var k of Object.keys(peers)){
-    var peersToSend = {};
-    for (var j of Object.keys(peers)){
-      if (j != k){
-        peersToSend[j] = peers[j];
-        console.log("Need to send " + j + " to " + k + " as it is a different peer");
-      } else {
-        console.log("Not sending peer " + j + " to " + k + " as it is himself");
-      }
-    }
-    peers[k].send({type: "peers", peers : peersToSend});
-  }
-}
-
 function init(){
 
 }
 
 var count = 0;
-var ball = new Ball(150, 100, 20, "rgb(200, 90, 150)");
 var balls = {};
 var peers = [];
 var peer = new Peer();
 var server;
-var serverBall = new Ball(0, 0, 10, "rgb(0, 0, 0)");
+var serverBall = new Player("server", 10, 0, "rgb(0, 0, 0)");
+var serverInterpBall = new Player("server", 10, 0, "rgb(0, 0, 0)");
+var clientBall = new Player("client", 50, 50, "rgb(100, 250, 90)");
 
 
 function animate(){
@@ -234,14 +129,10 @@ function animate(){
     setTimeout(animate, 1000/tickrate);
     //setTimeout(animate, 1000);
   }
-  console.log("draw");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ball.update();
-  ball.draw();
-  for (var ballID of Object.keys(balls)){
-    drawPeerBall(balls[ballID]);
-  }
-  serverBall.draw();
+  serverBall.draw(ctx);
+  serverInterpBall.draw(ctx);
+  clientBall.draw(ctx);
 }
 
 
@@ -267,9 +158,4 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log(err);
     peer = new Peer();
   })
-
-  /* peer.on('open', id => {
-      console.log("connected");
-      roomIDLbl.innerHTML = id;
-  }); */
 });

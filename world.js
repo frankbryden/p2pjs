@@ -1,4 +1,4 @@
-var tickRate = 8;
+var tickRate = 1;
 
 log("Setting up server...");
 
@@ -12,6 +12,7 @@ class World {
 		this.server.setOnPlayerUpdate((state) => {
 			this.playerUpdate(state);
 		});
+		this.lastTick = new Date();
 	}
 
 	newPlayer(playerID){
@@ -29,14 +30,16 @@ class World {
 	}
 
 	tick(){
+		let delta = (new Date()) - this.lastTick;
+		//console.log("last update was " + delta + " ms ago");
 		//update server state
 		for (var playerID of Object.keys(this.players)){
-			this.players[playerID].update();
+			this.players[playerID].update(delta/1000);
 		}
 		if (this.players != {}){
 			let keys = Object.keys(this.players);
 			if (keys.length > 0){
-				showX(this.players[Object.keys(this.players)].x);
+				showX(this.players[keys[0]].x);
 			}
 		}
 		//console.log(this.players);
@@ -45,11 +48,13 @@ class World {
 		for (var playerID of Object.keys(this.players)){
 			this.server.send(playerID, state);
 		}
+		this.lastTick = new Date();
 	}
 
 	playerUpdate(state){
 		//log("Player update : ");
 		//log(state);
+		console.log("player update");
 		this.players[state.playerID].updateState(state.keys);
 	}
 }
