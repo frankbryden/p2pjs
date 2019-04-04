@@ -36,8 +36,15 @@ class Server {
         });
     }
 
-    send(playerID, data){
-        this.peers[playerID].send(data);
+    send(playerID, data, type){
+        if (this.peers[playerID].open){
+            this.peers[playerID].send({data : data, type: type});
+        } else {
+            this.peers[playerID].on("open", () => {
+                this.peers[playerID].send({data : data, type: type});
+            });
+        }
+        
     }
 
     setupServer(){

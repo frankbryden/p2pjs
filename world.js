@@ -1,4 +1,4 @@
-var tickRate = 1;
+var tickRate = 32;
 
 log("Setting up server...");
 
@@ -19,6 +19,18 @@ class World {
 		log("new player in world !");
 		console.log(this.players);
 		this.players[playerID] = new Player(playerID, Math.round(Math.random() * 200), Math.round(Math.random() * 200), "rgb(100, 200, 100)");
+		for (var pID of Object.keys(this.players)){
+			if (pID != playerID){
+				this.server.send(pID, {playerIDs: [playerID]}, "newPlayers");
+			} else {
+				log("Not sending new player to " + pID + " as he is the new player " + playerID);
+				this.server.send(pID, {playerIDs: Object.keys(this.players)}, "newPlayers");
+			}
+			/* setTimeout(() => {
+				this.server.send(pID, {playerID: playerID}, "newPlayer");	
+			}, 200); */
+			//this.server.send(pID, {playerID: playerID}, "newPlayer");
+		}
 	}
 
 	get worldState(){
@@ -46,7 +58,7 @@ class World {
 		//send updated server state to players
 		let state = this.worldState;
 		for (var playerID of Object.keys(this.players)){
-			this.server.send(playerID, state);
+			this.server.send(playerID, state, "state");
 		}
 		this.lastTick = new Date();
 	}

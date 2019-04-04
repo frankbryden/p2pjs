@@ -4,7 +4,7 @@ class Player {
         this.x = x;
         this.y = y;
         this.col = col;
-        this.speed = 40; //px/s
+        this.speed = 100; //px/s
         this.keys = {"up": false, "down": false, "left": false, "right": false}
         this.positionBuffer = [];
     }

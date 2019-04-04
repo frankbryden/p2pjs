@@ -69,20 +69,39 @@ function connect(roomID){
 }
 
 function connectToServer(dataConnection){
-  server = dataConnection;
-  dataConnection.on("open", () => {
+  	server = dataConnection;
+  	dataConnection.on("open", () => {
     console.log("ready to receive data");
-    dataConnection.on("data", data => {
-      //console.log(data);
-      let keys = Object.keys(data);
-      if (keys.length > 0){
-        let playerData = data[keys[0]];
-        serverBall.x = playerData.x;
-        serverBall.y = playerData.y;
-        serverInterpBall.addPosition(playerData.x, playerData.y + 100);
-      }
-    });
-  });
+		dataConnection.on("data", data => {
+			console.log(data);
+			console.log("received data of type : " + data.type);
+			switch (data.type) {
+				case "state":
+					let playerIDs = Object.keys(data.data);
+					for (var playerID of playerIDs) {
+						let playerData = data.data[playerID];
+						/* balls[playerID].x = playerData.x;
+						balls[playerID].y = playerData.y; */
+						balls[playerID].addPosition(playerData.x, playerData.y);
+						//serverInterpBall.addPosition(playerData.x, playerData.y + 100);
+				  	}
+				 	/* if (playerIDs.length > 0) {
+						let playerData = data.data[playerIDs[0]];
+						serverBall.x = playerData.x;
+						serverBall.y = playerData.y;
+						serverInterpBall.addPosition(playerData.x, playerData.y + 100);
+				  	} */
+				  	break;
+			  	case "newPlayers":
+				  	console.log("New player : ");
+					console.log(data.data);
+					for (var playerID of data.data.playerIDs){
+						balls[playerID] = new Player(playerID, 0, 0, "rgb(100, 50, " + (Math.random() * 255) + ")");
+					}
+				  	//console.log(data);	
+		  	}
+		});
+  	});
 
   dataConnection.on("close", () => {
     console.log("lost connection to server with id " + dataConnection.id);
@@ -119,6 +138,7 @@ var server;
 var serverBall = new Player("server", 10, 0, "rgb(0, 0, 0)");
 var serverInterpBall = new Player("server", 10, 0, "rgb(0, 0, 0)");
 var clientBall = new Player("client", 50, 50, "rgb(100, 250, 90)");
+var balls = {};
 
 
 function animate(){
@@ -133,6 +153,9 @@ function animate(){
   serverBall.draw(ctx);
   serverInterpBall.draw(ctx);
   clientBall.draw(ctx);
+  for (var playerID of Object.keys(balls)){
+	  balls[playerID].draw(ctx);
+  }
 }
 
 
